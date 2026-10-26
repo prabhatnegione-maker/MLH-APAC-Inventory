@@ -1,0 +1,3 @@
+sku,name,category,tracking_type,location,quantity,minimum,unit_cost,notes
+EQ-001,Wireless microphone,Equipment,returnable,AV cabinet,8,2,89.99,Demo row — replace before importing
+SUP-001,Event lanyard,Event supplies,consumable,Storage B,150,40,1.25,Demo row — replace before importing

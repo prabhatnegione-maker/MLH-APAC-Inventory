@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#123d32" />
+    <title>MLH APAC · Inventory</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Inventory home"
+        ><span class="brand-icon">▦</span
+        ><span>MLH APAC<small>INVENTORY WORKSPACE</small></span></a
+      >
+      <div class="nav-label">WORKSPACE</div>
+      <nav aria-label="Main navigation">
+        <button class="nav active" data-view="inventory" aria-label="Inventory">
+          ▦ <span>Inventory</span></button
+        ><button class="nav" data-view="activity" aria-label="Stock activity">
+          ↗ <span>Stock activity</span></button
+        ><button class="nav" data-view="sheets" aria-label="Google Sheets">
+          ▤ <span>Google Sheets</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span> Local workspace<small
+          >Your stock. All in one place.</small
+        >
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div class="breadcrumb">
+          Workspace <span>/</span> <strong id="page-label">Inventory</strong>
+        </div>
+        <span class="workspace-badge">MLH APAC</span>
+      </header>
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">A LITTLE ORDER. A LOT OF CLARITY.</p>
+          <h1 id="page-title">Your inventory, at a glance.</h1>
+          <p id="page-description">
+            Keep the essentials in stock and your next move in sight.
+          </p>
+        </div>
+        <button id="add-item" class="primary">＋ Add item</button>
+      </section>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <section class="stats" aria-label="Inventory overview">
+        <article>
+          <span>Total items</span><strong id="stat-items">—</strong
+          ><small>Unique items in your inventory</small>
+        </article>
+        <article>
+          <span>Units on hand</span><strong id="stat-units">—</strong
+          ><small>Across all categories</small>
+        </article>
+        <article>
+          <span>Inventory value · USD</span><strong id="stat-value">—</strong
+          ><small>Available units × unit cost</small>
+        </article>
+        <article class="attention">
+          <span>Needs attention</span><strong id="stat-low">—</strong
+          ><small>At or below minimum stock</small>
+        </article>
+      </section>
+      <section id="inventory-view" class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>All inventory <span id="item-count" class="count">0</span></h2>
+            <p>A home for everything you keep on hand.</p>
+          </div>
+          <a href="/api/export" class="secondary export">↓ Export CSV</a>
+        </div>
+        <div class="toolbar">
+          <label class="search"
+            ><span aria-hidden="true">⌕</span
+            ><input
+              id="search"
+              type="search"
+              aria-label="Search inventory"
+              placeholder="Search items, SKUs, or locations…" /></label
+          ><select id="category" aria-label="Filter by category">
+            <option value="">All categories</option></select
+          ><select id="stock" aria-label="Filter by stock level">
+            <option value="">All stock levels</option>
+            <option value="low">Low stock</option>
+            <option value="out">Out of stock</option>
+            <option value="healthy">In stock</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Item / SKU</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Available stock</th>
+                <th>Unit cost</th>
+                <th><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="items-body"></tbody>
+          </table>
+        </div>
+        <div id="empty" class="empty" hidden>
+          <div class="empty-icon">▦</div>
+          <h3 id="empty-title">Make room for your first item.</h3>
+          <p id="empty-text">
+            Add what you keep on hand. We’ll help you keep track.
+          </p>
+          <button id="empty-add" class="primary">＋ Add your first item</button>
+        </div>
+        <footer class="table-footer">
+          <span id="results">Loading inventory…</span
+          ><span>Small details. Better decisions.</span>
+        </footer>
+      </section>
+      <section id="activity-view" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>Stock activity</h2>
+            <p>Your latest 100 changes, with a reason for every move.</p>
+          </div>
+          <button id="refresh" class="secondary">↻ Refresh</button>
+        </div>
+        <div class="panel-heading">
+          <div>
+            <h2>Outstanding equipment</h2>
+            <p>Return equipment here when it comes back.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Event / Borrower</th>
+                <th>Outstanding</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="loans-body"></tbody>
+          </table>
+        </div>
+        <p id="loans-empty" class="tracking-note" hidden>
+          No outstanding equipment loans.
+        </p>
+        <div class="panel-heading"><h2>Recent movements</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Change</th>
+                <th>Reason</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody id="activity-body"></tbody>
+          </table>
+        </div>
+        <p id="activity-empty" class="empty" hidden>
+          No activity yet. Add an item or adjust its stock to get started.
+        </p>
+      </section>
+      <section id="sheets-view" class="panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>SKU sources</h2>
+            <p>Add a Google Sheet tab or preview a CSV from a private sheet.</p>
+          </div>
+          <a class="secondary" href="/api/template">↓ CSV template</a>
+        </div>
+        <form id="source-form" class="sheet-form">
+          <p class="sheet-note">
+            Each SKU identifies one item across all tabs. New SKUs are
+            highlighted for review. Existing stock balances are preserved when
+            you import. For direct reading, the sheet must be shared with
+            “Anyone with the link” as a viewer. Use CSV upload to keep a sheet
+            private. Connected tabs are checked every 60 seconds while this
+            workspace is open.
+          </p>
+          <label for="source-label">Tab label</label
+          ><input
+            id="source-label"
+            name="label"
+            required
+            maxlength="80"
+            placeholder="e.g. Equipment"
+          /><label for="source-url">Google Sheet tab link</label
+          ><input
+            id="source-url"
+            name="url"
+            type="url"
+            required
+            placeholder="https://docs.google.com/spreadsheets/d/…/edit#gid=0"
+          /><button class="secondary" type="submit">Connect tab</button>
+          <p class="form-error" role="alert"></p>
+        </form>
+        <div class="sheet-form">
+          <label for="csv-file"
+            >Or upload a CSV (maximum 1 MB, 5,000 rows)</label
+          ><input id="csv-file" type="file" accept=".csv,text/csv" />
+          <p class="sheet-note">
+            Required columns: sku, name. Optional: category, tracking_type
+            (consumable or returnable), location, quantity (opening stock only),
+            minimum, unit_cost (USD), notes.
+          </p>
+        </div>
+        <div class="sheet-results">
+          <h3>Connected tabs</h3>
+          <ul id="sources-list"></ul>
+          <p id="sync-status" class="sheet-note" role="status"></p>
+          <div id="import-preview" hidden>
+            <h3 id="preview-title"></h3>
+            <p class="sheet-note">
+              Only new SKUs are added. Conflicts mean the same SKU has a
+              different name or tracking type; review them in your sheet.
+              Quantities for existing SKUs are never overwritten.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="preview-body"></tbody>
+              </table>
+            </div>
+            <button id="import-button" class="primary" type="button">
+              Add new SKUs
+            </button>
+          </div>
+        </div>
+      </section>
+      <p class="page-footer">Organized stock. One less thing to think about.</p>
+    </main>
+    <dialog id="item-dialog">
+      <form id="item-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">YOUR INVENTORY</p>
+            <h2 id="item-dialog-title">Add an item</h2>
+          </div>
+          <button type="button" class="icon close-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <label class="full"
+            >Item name<input
+              name="name"
+              required
+              maxlength="150"
+              placeholder="e.g. USB-C adapter" /></label
+          ><label
+            >SKU<input
+              name="sku"
+              required
+              maxlength="80"
+              placeholder="e.g. TECH-001" /></label
+          ><label
+            >Category<input
+              name="category"
+              required
+              maxlength="80"
+              value="General"
+              list="category-list" /></label
+          ><datalist id="category-list"></datalist
+          ><label class="full"
+            >Tracking type<select
+              name="tracking_type"
+              aria-label="Tracking type"
+            >
+              <option value="consumable">Consumable — used up at events</option>
+              <option value="returnable">
+                Returnable — checked out and brought back
+              </option>
+            </select></label
+          ><label class="full"
+            >Location<input
+              name="location"
+              maxlength="150"
+              placeholder="e.g. Storage room · Shelf A" /></label
+          ><label id="quantity-label"
+            >Opening quantity<input
+              name="quantity"
+              type="number"
+              min="0"
+              max="1000000000"
+              step="1"
+              value="0"
+              required /></label
+          ><label
+            >Minimum stock<input
+              name="minimum"
+              type="number"
+              min="0"
+              max="1000000000"
+              step="1"
+              value="5"
+              required /></label
+          ><label
+            >Unit cost (USD)<input
+              name="price"
+              type="number"
+              min="0"
+              max="1000000"
+              step="0.01"
+              value="0"
+              required /></label
+          ><label class="full"
+            >Notes<textarea
+              name="notes"
+              maxlength="2000"
+              rows="3"
+              placeholder="Anything useful to know…"
+            ></textarea>
+          </label>
+        </div>
+        <p class="form-error" role="alert"></p>
+        <div class="dialog-footer">
+          <button type="button" class="secondary close-dialog">Cancel</button
+          ><button type="submit" class="primary">Save item</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="adjust-dialog">
+      <form id="adjust-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">KEEP THINGS CURRENT</p>
+            <h2>Adjust stock</h2>
+          </div>
+          <button type="button" class="icon close-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <p id="adjust-description"></p>
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <label
+            >Direction<select name="direction">
+              <option value="1">Stock in (+)</option>
+              <option value="-1">Stock out (−)</option>
+            </select></label
+          ><label
+            >Quantity<input
+              name="amount"
+              type="number"
+              min="1"
+              max="1000000000"
+              step="1"
+              value="1"
+              required /></label
+          ><label class="full"
+            >Reason<input
+              name="reason"
+              maxlength="300"
+              required
+              placeholder="e.g. Restocked, checked out, or used at an event"
+          /></label>
+        </div>
+        <p class="form-error" role="alert"></p>
+        <div class="dialog-footer">
+          <button type="button" class="secondary close-dialog">Cancel</button
+          ><button type="submit" class="primary">Update stock</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="delete-dialog">
+      <form id="delete-form">
+        <h2>Delete this item?</h2>
+        <p id="delete-description"></p>
+        <p>Its stock history will be kept. This cannot be undone.</p>
+        <input type="hidden" name="id" />
+        <p class="form-error" role="alert"></p>
+        <div class="dialog-footer">
+          <button type="button" class="secondary close-dialog">Keep item</button
+          ><button type="submit" class="danger">Delete item</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="event-dialog">
+      <form id="event-form">
+        <div class="dialog-heading">
+          <h2 id="event-title">Record event usage</h2>
+          <button type="button" class="icon close-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <p id="event-description"></p>
+        <input type="hidden" name="id" /><input
+          type="hidden"
+          name="operation"
+        />
+        <div class="form-grid">
+          <label class="full"
+            >Event<input
+              name="event"
+              required
+              maxlength="150"
+              placeholder="e.g. APAC community meetup" /></label
+          ><label class="full" id="borrower-label"
+            >Borrower / responsible person<input
+              name="borrower"
+              maxlength="150"
+              placeholder="Who will return the equipment?" /></label
+          ><label
+            >Quantity<input
+              name="quantity"
+              type="number"
+              required
+              min="1"
+              max="1000000000"
+              step="1"
+              value="1"
+          /></label>
+        </div>
+        <p class="form-error" role="alert"></p>
+        <div class="dialog-footer">
+          <button class="secondary close-dialog" type="button">Cancel</button
+          ><button class="primary" type="submit">Record usage</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="return-dialog">
+      <form id="return-form">
+        <div class="dialog-heading">
+          <h2>Return equipment</h2>
+          <button type="button" class="icon close-dialog" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <p id="return-description"></p>
+        <input type="hidden" name="id" />
+        <div class="form-grid">
+          <label class="full"
+            >Quantity returned<input
+              name="quantity"
+              type="number"
+              min="1"
+              step="1"
+              required
+          /></label>
+        </div>
+        <p class="form-error" role="alert"></p>
+        <div class="dialog-footer">
+          <button class="secondary close-dialog" type="button">Cancel</button
+          ><button class="primary" type="submit">Record return</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+  </body>
+</html>
