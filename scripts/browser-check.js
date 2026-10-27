@@ -5,6 +5,9 @@ import { createApp } from "../server.js";
 
 const server = createApp({
   dbPath: ":memory:",
+  databaseUrl: "",
+  databaseToken: "",
+  hosted: false,
   password: "",
   fetcher: async () =>
     new Response(
@@ -87,13 +90,11 @@ try {
     .click();
   const csv =
     "sku,name,tracking_type,quantity\nSUP-001,Event lanyards,consumable,999\nNEW-001,Notebook,consumable,5";
-  await page
-    .locator("#csv-file")
-    .setInputFiles({
-      name: "inventory.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(csv),
-    });
+  await page.locator("#csv-file").setInputFiles({
+    name: "inventory.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
   await page.locator("#import-preview").waitFor({ state: "visible" });
   assert.match(await page.locator("#preview-title").innerText(), /1 new SKU/);
   await page.getByRole("button", { name: "Add new SKUs", exact: true }).click();

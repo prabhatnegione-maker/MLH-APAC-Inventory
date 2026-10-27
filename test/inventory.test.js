@@ -7,7 +7,14 @@ import { createApp } from "../server.js";
 import { parseSheet, sheetSource } from "../sheets.js";
 
 async function fixture(t, options = {}) {
-  const server = createApp({ dbPath: ":memory:", password: "", ...options });
+  const server = createApp({
+    dbPath: ":memory:",
+    databaseUrl: "",
+    databaseToken: "",
+    hosted: false,
+    password: "",
+    ...options,
+  });
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   t.after(() => new Promise((r) => server.close(r)));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -341,7 +348,13 @@ test("stock survives an application restart", async (t) => {
   const dir = mkdtempSync(join(tmpdir(), "inventory-test-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const dbPath = join(dir, "test.db");
-  const server = createApp({ dbPath, password: "" });
+  const server = createApp({
+    dbPath,
+    password: "",
+    databaseUrl: "",
+    databaseToken: "",
+    hosted: false,
+  });
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   const response = await fetch(
     `http://127.0.0.1:${server.address().port}/api/items`,

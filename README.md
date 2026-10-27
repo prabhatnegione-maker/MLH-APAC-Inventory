@@ -1,6 +1,10 @@
 # MLH APAC Inventory
 
-A SKU-first inventory workspace for products, supplies, consumables, and returnable equipment. Built with Node.js 24, SQLite, and a responsive browser interface. The application has no runtime package dependencies; Playwright is used only for browser tests.
+A SKU-first inventory workspace for products, supplies, consumables, and returnable equipment. Built with Node.js 24, SQLite, and a responsive browser interface. Hosted deployments use Turso through the libSQL client; Playwright is used for browser tests.
+
+## Host on Vercel
+
+Follow [the Vercel deployment guide](DEPLOY_VERCEL.md). The repository includes a serverless entry and routing configuration. Hosted inventory uses a durable Turso/libSQL database, and an access password is required. Local SQLite development continues to work without a cloud account.
 
 ## Run locally
 
@@ -11,7 +15,7 @@ npm start
 
 Open `http://127.0.0.1:3000` in your own local browser. The database is created automatically in `data/inventory.db`. The initial inventory is empty. To add **optional sample data** to an empty database, run `npm run seed`; running it again leaves existing inventory unchanged.
 
-For development use `npm run dev`. Node.js 24 or newer is required for the built-in SQLite driver. No database service, Docker, cloud account, or API key is required for local inventory management.
+For development use `npm run dev`. Node.js 24.x is required for the built-in SQLite driver. No database service, Docker, cloud account, or API key is required for local inventory management.
 
 ## Inventory workflow
 
@@ -70,6 +74,8 @@ CSV import supports quoted commas, quoted multiline notes, and UTF-8 BOMs. Files
 
 | Variable             | Default                        | Purpose                                                                      |
 | -------------------- | ------------------------------ | ---------------------------------------------------------------------------- |
+| `TURSO_DATABASE_URL` | unset                          | Hosted libSQL database URL; enables remote persistence                       |
+| `TURSO_AUTH_TOKEN`   | unset                          | Private database-specific read/write token                                   |
 | `HOST`               | `127.0.0.1`                    | Bind address                                                                 |
 | `PORT`               | `3000`                         | HTTP port                                                                    |
 | `DATABASE_PATH`      | `data/inventory.db`            | SQLite file path, relative to the process working directory if customised    |

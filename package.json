@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A practical inventory tracker with SQLite persistence and stock history.",
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "scripts": {
     "start": "node server.js",
@@ -14,9 +14,12 @@
     "test:browser": "node scripts/browser-check.js",
     "seed": "node seed.js",
     "smoke": "node scripts/smoke.js",
-    "check": "node --check server.js && node --check sheets.js && node --check public/app.js && node --check seed.js && node --check scripts/smoke.js && node --check scripts/browser-check.js && node --check < google-sheets/Setup.gs"
+    "check": "node --check server.js && node --check database.js && node --check api/index.js && node --check sheets.js && node --check public/app.js && node --check seed.js && node --check scripts/smoke.js && node --check scripts/browser-check.js && node --check < google-sheets/Setup.gs"
   },
   "devDependencies": {
     "playwright": "1.64.1"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0"
   }
 }
